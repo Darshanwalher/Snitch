@@ -1,0 +1,45 @@
+name: CI — Test Suite
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18, 20]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: Backend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: Backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET_KEY: test-secret-key-for-ci
+          GOOGLE_CLIENT_ID: test
+          GOOGLE_CLIENT_SECRET: test
+          IMAGEKIT_PRIVATE_KEY: test
+          RAZORPAY_KEY_ID: test
+          RAZORPAY_KEY_SECRET: test
+          GOOGLE_REFRESH_TOKEN: test
+          GOOGLE_USER: test@test.com
+          FRONTEND_URL: http://localhost:5173
+        run: npm test
