@@ -50,4 +50,4 @@ jobs:
 
       - name: Deploy to Render
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          curl -X POST "https://api.render.com/deploy/srv-d8sejlgjs32c73d1vtj0?key=FlHU89UQzLQ"
