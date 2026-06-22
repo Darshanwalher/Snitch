@@ -11,7 +11,11 @@ export async function setupDB() {
     if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
     }
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await MongoMemoryServer.create({
+        download: {
+            md5Check: false
+        }
+    });
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);
 }

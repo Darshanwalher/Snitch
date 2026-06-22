@@ -66,6 +66,7 @@ describe("Cart Integration Tests", () => {
         // Seed product and add to cart
         const product = await productModel.create({
             title: "Leather Boots",
+            description: "Genuine leather construction",
             price: { amount: 4999, currency: "INR" },
             seller: "60c72b2f9b1d8a2c388a1111",
             images: [],
@@ -99,6 +100,7 @@ describe("Cart Integration Tests", () => {
         // Seed product with 0 stock
         const product = await productModel.create({
             title: "Sold Out Cap",
+            description: "Oversized classic cap",
             price: { amount: 599, currency: "INR" },
             seller: "60c72b2f9b1d8a2c388a1111",
             images: [],
