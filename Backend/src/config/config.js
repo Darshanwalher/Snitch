@@ -44,7 +44,6 @@ export const config = {
     GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN || "mock_google_refresh_token",
     GOOGLE_USER: process.env.GOOGLE_USER || "test@test.com",
     NODE_ENV: process.env.NODE_ENV || "development",
-    PORT: parseInt(process.env.PORT || "3000", 10),
     FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173"
 };
 
