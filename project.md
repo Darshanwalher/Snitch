@@ -1,63 +1,86 @@
 # SNITCH — Modern Streetwear E-Commerce Platform
 
-> A full-stack marketplace where streetwear brands list, manage, and sell products directly to buyers — complete with real-time payments, transactional emails, and role-based seller dashboards.
+> A production-grade, multi-vendor marketplace where streetwear brands list, manage, and sell products directly to buyers — complete with real-time payments, transactional emails, and role-based seller dashboards.
+
+🔗 **Live Deployment:** [snitch-trend.onrender.com](https://snitch-trend.onrender.com)
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Data Model](#data-model)
+- [System Architecture](#system-architecture)
+- [Application Flow — Checkout Journey](#application-flow--checkout-journey)
+- [Backend Request Lifecycle](#backend-request-lifecycle)
+- [Folder Structure](#folder-structure)
+- [Setup & Installation](#setup--installation)
+- [API Reference](#api-reference)
+- [Roadmap](#roadmap)
 
 ---
 
 ## Overview
 
-Snitch is a production-deployed, multi-vendor e-commerce platform purpose-built for the streetwear niche. Sellers manage product catalogs with variant-level control (size, color, stock, per-variant pricing and imagery), while buyers browse, search with advanced filters, add to cart, and checkout via Razorpay. The system handles the full commerce lifecycle — from registration and Google OAuth sign-in through payment verification with atomic stock deduction and branded transactional email dispatch to both buyers and sellers.
+**SNITCH** is a full-stack, multi-vendor e-commerce platform purpose-built for the streetwear niche. Sellers manage product catalogs with variant-level control — size, color, stock, per-variant pricing, and dedicated imagery — while buyers browse, filter, add to cart, and checkout via **Razorpay**.
 
-**Live deployment:** [snitch-trend.onrender.com](https://snitch-trend.onrender.com)
+The platform handles the complete commerce lifecycle: from registration and Google OAuth sign-in through payment verification with atomic stock deduction, all the way to branded transactional email dispatch to both buyers and sellers.
 
 ---
 
 ## Key Features
 
-### Authentication & Security
-- **JWT cookie-based authentication** with 7-day token expiry, keeping sessions persistent across browser tabs without exposing tokens to JavaScript
-- **Google OAuth 2.0 sign-in** via Passport.js, enabling frictionless one-click registration and login
-- **OTP-based password reset** with time-limited (10-minute) codes auto-expiring via MongoDB TTL indexes, preventing replay attacks
-- **Role-based access control** with separate `buyer` and `seller` roles enforced at the middleware layer — sellers access product management endpoints, buyers access cart and checkout
-- **Request validation layer** using `express-validator` on all mutation endpoints, catching malformed input before it reaches business logic
-- **API Rate Limiting** via `express-rate-limit` — strict limits (15 attempts/15 mins) on authentication endpoints to prevent brute-force attacks, and general limits (100 requests/15 mins) globally across all API routes to protect system resources
+### 🔐 Authentication & Security
 
-### Product Management (Seller)
-- **Multi-image product listings** with images uploaded to ImageKit CDN via buffer streaming (no disk I/O), supporting up to 7 images per product
-- **Product variant system** allowing sellers to define size/color/attribute variants, each with independent pricing, stock levels, and image sets
-- **Full CRUD operations** — create, update, and delete products and individual variants through protected seller-only endpoints
-- **Seller dashboard** providing a centralized view of all listed products with direct management controls
+- **JWT cookie-based sessions** — 7-day token expiry with HTTP-only cookies; no token exposure to JavaScript
+- **Google OAuth 2.0** — Frictionless one-click sign-in via Passport.js
+- **OTP password reset** — Time-limited 10-minute codes auto-expiring via MongoDB TTL indexes, preventing replay attacks
+- **Role-based access control** — Distinct `buyer` and `seller` roles enforced at the middleware layer
+- **Input validation** — `express-validator` on all mutation endpoints
+- **Rate limiting** — Strict 15 attempts/15 min on auth routes; 100 requests/15 min globally via `express-rate-limit`
 
-### Shopping & Checkout (Buyer)
-- **Advanced product search** with multi-filter support: text query (title, description, variant attributes), price range, size, color, and sort options (price ascending/descending, newest)
-- **Cart with stock-awareness** — quantity adjustments are validated against real-time inventory, preventing overselling with clear user feedback
-- **Buy Now + Cart checkout** — two purchase flows: instant single-item purchase or standard cart-based checkout, both routing through the same payment pipeline
-- **Razorpay payment integration** with server-side order creation, client-side checkout widget, and cryptographic signature verification on the backend
-- **Server-Side Pagination** on product listings and search results returning structured metadata (`currentPage`, `totalPages`, `totalProducts`, `limit`) to minimize initial load times and network overhead
+### 🛍️ Product Management (Seller)
 
-### Order Processing & Notifications
-- **Atomic stock deduction with rollback** — on payment verification, stock is decremented per-variant with a compensating transaction pattern; if any item is out of stock, all prior deductions are reversed
-- **Branded HTML transactional emails** sent via Gmail REST API (OAuth2, no SMTP dependency) — welcome emails on registration, OTP emails for password reset, order confirmations to buyers, and per-seller order notifications with itemized breakdowns
-- **Development email fallback** — when OAuth credentials are absent, emails log to console instead of failing silently, enabling offline development
+- **Multi-image listings** — Up to 7 images per product, streamed directly to ImageKit CDN (no disk I/O)
+- **Variant system** — Size, color, and custom attributes per variant, each with independent pricing, stock, and images
+- **Full CRUD** — Create, update, and delete products and individual variants via protected endpoints
+- **Seller dashboard** — Centralized view of all listed products with inline management controls
 
-### Frontend
-- **React 19 SPA** with React Router v7 for client-side routing and protected route guards
-- **Redux Toolkit** for centralized state management across auth, product, and cart domains
-- **Feature-based architecture** with isolated modules (auth, products, cart, shared) each containing pages, hooks, services, and state slices
-- **Responsive UI** built with Tailwind CSS v4, using premium typography (Bebas Neue + DM Sans) for a streetwear brand aesthetic
+### 🛒 Shopping & Checkout (Buyer)
+
+- **Advanced search** — Multi-filter: text query, price range, size, color, and sort options
+- **Stock-aware cart** — Quantity adjustments validated against real-time inventory with clear user feedback
+- **Dual purchase flows** — Buy Now (instant) and Cart Checkout, both routing through the same payment pipeline
+- **Razorpay integration** — Server-side order creation, client-side checkout widget, and cryptographic signature verification
+- **Server-side pagination** — Returns `currentPage`, `totalPages`, `totalProducts`, `limit` metadata
+
+### 📦 Order Processing & Notifications
+
+- **Atomic stock deduction with rollback** — On payment verification, stock decrements per-variant; any failure reverses all prior deductions
+- **Branded transactional emails** — Gmail REST API (OAuth2, no SMTP): welcome, OTP, order confirmation, and per-seller notifications
+- **Dev email fallback** — When credentials are absent, emails log to console for seamless offline development
+
+### 🎨 Frontend
+
+- **React 19 SPA** with React Router v7 protected route guards
+- **Redux Toolkit** — Centralized state across auth, product, and cart domains
+- **Feature-based architecture** — Isolated modules (auth, products, cart, shared)
+- **Tailwind CSS v4** with premium typography — Bebas Neue + DM Sans for a genuine streetwear aesthetic
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
+|-------|------------|---------|
 | **Frontend** | React 19 | Component-based UI with hooks |
 | **Frontend** | React Router v7 | Client-side routing with protected routes |
 | **Frontend** | Redux Toolkit | Centralized state management |
 | **Frontend** | Tailwind CSS v4 | Utility-first responsive styling |
-| **Frontend** | Axios | HTTP client with cookie credential |
-| **Backend** | Vite 8 | Dev server with HMR and API proxy |
+| **Frontend** | Axios | HTTP client with cookie credentials |
+| **Build** | Vite 8 | Dev server with HMR and API proxy |
 | **Backend** | Express 5 | REST API framework |
 | **Backend** | Passport.js | Google OAuth 2.0 strategy |
 | **Backend** | JSON Web Tokens | Stateless session authentication |
@@ -70,248 +93,248 @@ Snitch is a production-deployed, multi-vendor e-commerce platform purpose-built 
 | **Payments** | Razorpay | Order creation, payment capture, signature verification |
 | **Storage** | ImageKit | CDN-backed image storage and optimization |
 | **Email** | Gmail REST API | Transactional email dispatch via OAuth2 |
-| **DevOps** | Render | Full-stack cloud deployment (static frontend served from Express) |
+| **DevOps** | Render | Full-stack cloud deployment |
 | **Logging** | Morgan | HTTP request logging in development |
-| **Testing** | Jest | Test runner and expectation framework |
-| **Testing** | Supertest | HTTP integration test library |
-| **Testing** | mongodb-memory-server | In-memory isolated database instance |
+| **Testing** | Jest + Supertest | Test runner, expectations, HTTP integration tests |
+| **Testing** | mongodb-memory-server | In-memory isolated database for tests |
 | **CI/CD** | GitHub Actions | Automated testing and verification workflow |
 
 ---
 
 ## Data Model
 
-| Collection | Key Fields | Relationships |
-|------------|-----------|---------------|
-| **User** | `email` (unique), `password` (bcrypt), `fullname`, `contact`, `role` (buyer \| seller), `googleId` | → owns 1 Cart, → sells many Products, → has many Payments |
-| **Product** | `title`, `description`, `price` {amount, currency}, `images[]`, `variants[]`, `timestamps` | → belongs to 1 User (seller), → contains many Variants (embedded) |
-| **Variant** | `images[]`, `stock`, `attributes` {color, size, ...}, `price` {amount, currency} | Embedded inside Product |
-| **Cart** | `user` (ref → User), `items[]` | → belongs to 1 User, → items reference Product + Variant |
-| **Cart Item** | `product` (ref), `variant` (ref), `quantity`, `price` {amount, currency} | Embedded inside Cart |
-| **Payment** | `status` (pending \| paid \| failed), `isBuyNow`, `razorpay` {orderId, paymentId, signature}, `price`, `orderItems[]` | → belongs to 1 User, → contains Order Item snapshots |
-| **Order Item** | `title`, `productId`, `variantId`, `quantity`, `images[]`, `description`, `price` | Embedded inside Payment (immutable snapshot) |
-| **OTP** | `email` (unique), `otp`, `createdAt` (TTL: 600s auto-delete) | → linked to User by email |
+### Entity Relationship Overview
 
-**Design decisions:**
-- **Embedding vs. referencing** — Variants are embedded inside Products (always accessed together), while Cart items reference Products by ObjectId (queried separately via aggregation pipelines).
-- **Order snapshots** — Payment records store a full copy of ordered items at purchase time, so product edits or deletions never corrupt historical order data.
-- **Reusable `priceSchema`** — A shared subdocument `{amount, currency}` is used across Products, Variants, Cart Items, and Payments for consistent multi-currency pricing.
-- **TTL auto-expiry** — OTP documents are auto-deleted by MongoDB after 10 minutes without any application-level cron or cleanup.
+```mermaid
+erDiagram
+    USER {
+        string email PK
+        string password
+        string fullname
+        string contact
+        string role
+        string googleId
+    }
+    PRODUCT {
+        string title
+        string description
+        number price_amount
+        string price_currency
+        string[] images
+        date timestamps
+    }
+    VARIANT {
+        string[] images
+        number stock
+        string color
+        string size
+        number price_amount
+    }
+    CART {
+        ObjectId user FK
+    }
+    CART_ITEM {
+        ObjectId product FK
+        ObjectId variant FK
+        number quantity
+        number price_amount
+    }
+    PAYMENT {
+        string status
+        boolean isBuyNow
+        string razorpay_orderId
+        string razorpay_paymentId
+        string razorpay_signature
+        number price
+    }
+    ORDER_ITEM {
+        string title
+        ObjectId productId
+        ObjectId variantId
+        number quantity
+        string[] images
+        number price_amount
+    }
+    OTP {
+        string email PK
+        string otp
+        date createdAt
+    }
+
+    USER ||--o{ PRODUCT : "sells"
+    USER ||--|| CART : "owns"
+    USER ||--o{ PAYMENT : "makes"
+    PRODUCT ||--o{ VARIANT : "contains"
+    CART ||--o{ CART_ITEM : "holds"
+    CART_ITEM }o--|| PRODUCT : "references"
+    CART_ITEM }o--|| VARIANT : "references"
+    PAYMENT ||--o{ ORDER_ITEM : "snapshots"
+```
+
+### Design Decisions
+
+- **Embedded variants** — Variants live inside Products since they're always accessed together; no extra query overhead
+- **Order snapshots** — Payment records store immutable item copies at purchase time, so edits or deletions never corrupt order history
+- **Shared `priceSchema`** — A reusable `{amount, currency}` subdocument spans Products, Variants, Cart Items, and Payments for consistent multi-currency support
+- **TTL auto-expiry** — OTP documents self-destruct via MongoDB TTL index after 10 minutes — no cron jobs required
 
 ---
 
 ## System Architecture
 
-```
-                              ┌──────────────────────┐
-                              │   Google OAuth 2.0    │
-                              │     Provider          │
-                              └──────────┬───────────┘
-                                         │ OAuth flow
-                                         ▼
-┌─────────────────────┐       ┌──────────────────────┐       ┌──────────────────────┐
-│                     │       │                      │       │                      │
-│   React 19 SPA      │       │   Passport.js        │       │   Gmail REST API     │
-│   (Vite + Tailwind) │       │   (Google Strategy)  │       │   (Transactional     │
-│                     │       │                      │       │    Email via OAuth2)  │
-│  ┌───────────────┐  │       └──────────┬───────────┘       └──────────▲───────────┘
-│  │ Redux Toolkit  │ │                  │                              │
-│  │ (auth, product,│ │                  │                              │
-│  │  cart slices)  │ │                  │                              │
-│  └───────────────┘  │                  │                              │
-│                     │  REST API calls  │                              │
-│  ┌───────────────┐  │  (JWT cookie)    │                              │
-│  │ React Router  │  │ ───────────────► │                              │
-│  │ v7 (Protected │  │                  │                              │
-│  │  Routes)      │  │                  ▼                              │
-│  └───────────────┘  │       ┌──────────────────────┐                  │
-│                     │       │                      │    OAuth2 token  │
-│  ┌───────────────┐  │       │   Express 5 API      │ ─────────────────┘
-│  │ Axios         │  │       │   Server             │
-│  │ (credentials) │  │       │                      │    Buffer upload
-│  └───────────────┘  │       │  ┌────────────────┐  │ ──────────────────┐
-│                     │       │  │ Controllers     │  │                  │
-└─────────┬───────────┘       │  │ DAO Layer       │  │                  ▼
-          │                   │  │ Services        │  │       ┌──────────────────────┐
-          │                   │  │ Middleware      │  │       │                      │
-          │  Razorpay         │  │ Validators      │  │       │   ImageKit CDN       │
-          │  Checkout         │  └────────┬───────┘  │       │   (Image Storage     │
-          │  Widget           │           │          │       │    & Optimization)    │
-          │                   │           │ Mongoose │       │                      │
-          ▼                   │           │ ODM      │       └──────────────────────┘
-┌─────────────────────┐       │           │          │
-│                     │       └───────────┼──────────┘
-│   Razorpay          │◄── Order create / │
-│   Payment Gateway   │    Signature      │
-│                     │    verify          ▼
-│  - Order creation   │       ┌──────────────────────┐
-│  - Payment capture  │       │                      │
-│  - Signature verify │       │   MongoDB Atlas      │
-│                     │       │   (Cloud Database)   │
-└─────────────────────┘       │                      │
-                              │  Collections:        │
-                              │  users, products,    │
-                              │  carts, payments,    │
-                              │  otps                │
-                              └──────────────────────┘
+```mermaid
+graph TB
+    subgraph Client["🖥️ React 19 SPA"]
+        RR["React Router v7\n(Protected Routes)"]
+        RTK["Redux Toolkit\n(auth · product · cart)"]
+        AX["Axios\n(JWT cookie)"]
+    end
+
+    subgraph Server["⚙️ Express 5 API Server"]
+        PP["Passport.js\n(Google OAuth)"]
+        MW["Middleware Layer\n(Auth · Role · Multer · Validator)"]
+        CTRL["Controllers"]
+        DAO["DAO Layer\n(Aggregation Pipelines)"]
+        SVC["Services\n(payment · storage · email)"]
+    end
+
+    subgraph External["🌐 External Services"]
+        GOAuth["Google OAuth 2.0"]
+        GAPI["Gmail REST API\n(Transactional Email)"]
+        IK["ImageKit CDN\n(Image Storage)"]
+        RZP["Razorpay\n(Payment Gateway)"]
+        MDB["MongoDB Atlas\n(Cloud Database)"]
+    end
+
+    AX -->|REST API calls| MW
+    MW --> CTRL
+    CTRL --> DAO
+    CTRL --> SVC
+    DAO --> MDB
+    SVC --> RZP
+    SVC --> IK
+    SVC --> GAPI
+    PP <-->|OAuth flow| GOAuth
+
+    style Client fill:#1a1a2e,color:#e0e0ff,stroke:#4a4aff
+    style Server fill:#0d2137,color:#e0f0ff,stroke:#1a6fa8
+    style External fill:#1a2d1a,color:#e0ffe0,stroke:#2d8a2d
 ```
 
-The architecture follows a **monolithic REST API** pattern with the React SPA served as static assets from the Express server in production. This eliminates CORS complexity and simplifies deployment to a single Render service. External services are cleanly abstracted behind dedicated service modules (`payment.service.js`, `storage.service.js`, `email.js`), making them independently swappable. The frontend communicates exclusively via REST endpoints with JWT tokens stored in HTTP cookies for secure, cross-tab session persistence.
+> The architecture follows a **monolithic REST API** pattern. The React SPA is served as static assets from Express in production, eliminating CORS complexity and simplifying deployment to a single Render service. External services are cleanly abstracted behind dedicated service modules, making each independently swappable.
 
 ---
 
 ## Application Flow — Checkout Journey
 
-```
-  BUYER                REACT SPA              EXPRESS API             RAZORPAY            MONGODB           GMAIL API
-    │                     │                       │                     │                   │                  │
-    │  Browse products    │                       │                     │                   │                  │
-    │ ──────────────────► │  GET /api/products     │                     │                   │                  │
-    │                     │ ─────────────────────► │                     │                   │                  │
-    │                     │                       │  find all products  │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │                       │ ◄─────────────────────────────────────  │                  │
-    │                     │ ◄──────────────────── │  products[]          │                   │                  │
-    │  ◄───────────────── │                       │                     │                   │                  │
-    │                     │                       │                     │                   │                  │
-    │  Add to cart        │                       │                     │                   │                  │
-    │ ──────────────────► │  POST /api/cart/add    │                     │                   │                  │
-    │                     │ ─────────────────────► │                     │                   │                  │
-    │                     │                       │  1. Validate stock  │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │                       │ ◄─────────────────────────────────────  │                  │
-    │                     │                       │  2. Upsert cart     │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │ ◄──────────────────── │  Cart updated        │                   │                  │
-    │  ◄───────────────── │                       │                     │                   │                  │
-    │                     │                       │                     │                   │                  │
-    │  Checkout           │                       │                     │                   │                  │
-    │ ──────────────────► │  POST /payment/create  │                     │                   │                  │
-    │                     │ ─────────────────────► │                     │                   │                  │
-    │                     │                       │  3. Aggregate cart  │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │                       │  4. Create order    │                   │                  │
-    │                     │                       │ ──────────────────► │                   │                  │
-    │                     │                       │ ◄───────────────── │  order_id           │                  │
-    │                     │                       │  5. Save payment   │                   │                  │
-    │                     │                       │    (status:pending) │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │ ◄──────────────────── │  Order details      │                   │                  │
-    │                     │                       │                     │                   │                  │
-    │                     │  Open Razorpay widget  │                     │                   │                  │
-    │                     │ ─────────────────────────────────────────► │                   │                  │
-    │  Complete payment   │                       │                     │                   │                  │
-    │ ──────────────────────────────────────────────────────────────► │                   │                  │
-    │                     │ ◄──────────────────────────────────────── │                   │                  │
-    │                     │  payment_id + signature │                     │                   │                  │
-    │                     │                       │                     │                   │                  │
-    │                     │  POST /payment/verify   │                     │                   │                  │
-    │                     │ ─────────────────────► │                     │                   │                  │
-    │                     │                       │  6. Verify signature │                   │                  │
-    │                     │                       │  7. Atomic stock    │                   │                  │
-    │                     │                       │     deduction       │                   │                  │
-    │                     │                       │     (with rollback) │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │                       │  8. Payment→"paid"  │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │                       │  9. Clear cart      │                   │                  │
-    │                     │                       │ ──────────────────────────────────────► │                  │
-    │                     │                       │ 10. Order confirm   │                   │                  │
-    │                     │                       │ ─────────────────────────────────────────────────────────► │
-    │                     │                       │ 11. Seller notify   │                   │                  │
-    │                     │                       │ ─────────────────────────────────────────────────────────► │
-    │                     │ ◄──────────────────── │  Payment verified    │                   │                  │
-    │  Order success page │                       │                     │                   │                  │
-    │ ◄───────────────── │                       │                     │                   │                  │
+```mermaid
+sequenceDiagram
+    actor Buyer
+    participant SPA as React SPA
+    participant API as Express API
+    participant RZP as Razorpay
+    participant DB as MongoDB Atlas
+    participant EMAIL as Gmail API
+
+    Buyer->>SPA: Browse products
+    SPA->>API: GET /api/products
+    API->>DB: find all products (paginated)
+    DB-->>API: products[]
+    API-->>SPA: products + pagination metadata
+    SPA-->>Buyer: Product listing rendered
+
+    Buyer->>SPA: Add item to cart
+    SPA->>API: POST /api/cart/add/:productId/:variantId
+    API->>DB: 1. Validate variant stock
+    DB-->>API: stock confirmed
+    API->>DB: 2. Upsert cart item
+    DB-->>API: cart updated
+    API-->>SPA: 200 OK
+    SPA-->>Buyer: Cart updated
+
+    Buyer->>SPA: Proceed to checkout
+    SPA->>API: POST /api/cart/payment/create/order
+    API->>DB: 3. Aggregate cart with product + variant data
+    DB-->>API: order items + total price
+    API->>RZP: 4. Create Razorpay order
+    RZP-->>API: order_id
+    API->>DB: 5. Save pending Payment record
+    DB-->>API: payment saved
+    API-->>SPA: order_id + key
+
+    SPA->>RZP: Open Razorpay checkout widget
+    Buyer->>RZP: Complete payment
+    RZP-->>SPA: payment_id + signature
+
+    SPA->>API: POST /api/cart/payment/verify/order
+    API->>API: 6. Cryptographic signature verification
+    API->>DB: 7. Atomic stock deduction (with rollback)
+    DB-->>API: stock updated
+    API->>DB: 8. Mark Payment → "paid"
+    API->>DB: 9. Clear buyer's cart
+    API->>EMAIL: 10. Send order confirmation to buyer
+    API->>EMAIL: 11. Send per-seller notifications
+    API-->>SPA: 200 Payment verified
+    SPA-->>Buyer: Order success page
 ```
 
-**Step-by-step breakdown:**
-1. **Stock validation** — Cart operations check variant-level inventory in real-time before allowing additions or quantity changes.
-2. **Cart upsert** — If the item already exists in the cart, the quantity is incremented; otherwise a new cart item is created.
-3. **Cart aggregation** — MongoDB aggregation pipeline joins cart items with products and their matching variants to compute the total price.
-4. **Razorpay order** — A server-side order is created with the computed amount; the frontend opens the Razorpay checkout widget.
-5. **Payment record** — A pending payment document is created with all order item snapshots before the user pays.
-6. **Signature verification** — The Razorpay signature is cryptographically verified server-side to prevent tampering.
-7. **Atomic stock deduction** — Stock is decremented per-variant with a compensating rollback if any item has insufficient inventory.
-8. **Status update** — Payment status transitions from `pending` → `paid` with Razorpay IDs stored.
-9. **Cart cleanup** — The buyer's cart is cleared after successful payment.
-10. **Buyer email** — Branded HTML order confirmation sent via Gmail REST API with itemized order details.
-11. **Seller emails** — Each seller with items in the order receives a separate notification email with their specific items and earnings.
+### Step-by-Step Breakdown
+
+| Step | Action | Detail |
+|------|--------|--------|
+| **1** | Stock validation | Cart operations check variant-level inventory in real-time before allowing additions or quantity changes |
+| **2** | Cart upsert | Increments quantity if item exists; creates new cart item otherwise |
+| **3** | Cart aggregation | MongoDB pipeline joins cart items with products and variants to compute the total price |
+| **4** | Razorpay order | Server-side order created with computed amount; frontend opens Razorpay checkout widget |
+| **5** | Payment record | Pending payment document created with all order item snapshots before payment |
+| **6** | Signature verification | Razorpay signature cryptographically verified server-side to prevent tampering |
+| **7** | Atomic stock deduction | Stock decremented per-variant; full compensating rollback if any item has insufficient inventory |
+| **8** | Status transition | Payment transitions `pending` → `paid` with Razorpay IDs stored |
+| **9** | Cart cleanup | Buyer's cart cleared after successful payment |
+| **10** | Buyer email | Branded HTML order confirmation with itemized details via Gmail REST API |
+| **11** | Seller emails | Each seller with items in the order receives a separate notification with their specific items and earnings |
 
 ---
 
 ## Backend Request Lifecycle
 
-```
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                    Incoming HTTP Request                        │
-  └──────────────────────────┬──────────────────────────────────────┘
-                             ▼
-                   ┌─────────────────┐
-                   │  Morgan Logger  │  ← Logs method, URL, status, time
-                   └────────┬────────┘
-                            ▼
-                   ┌─────────────────┐
-                   │  Body Parsers   │  ← express.json + urlencoded + cookieParser
-                   └────────┬────────┘
-                            ▼
-                   ┌─────────────────┐
-                   │ CORS Middleware  │  ← Whitelist origin, credentials, methods
-                   └────────┬────────┘
-                            ▼
-                ┌───────────────────────┐
-                │    Route Matching     │
-                │ /auth  /products /cart │
-                └───┬───────┬───────┬───┘
-                    │       │       │
-          ┌─────────┘       │       └──────────┐
-          ▼                 ▼                   ▼
-    ┌──────────┐    ┌──────────────┐    ┌──────────────┐
-    │  Public  │    │Authenticated │    │ Seller Only  │
-    └────┬─────┘    └──────┬───────┘    └──────┬───────┘
-         │                 │                   │
-         │          ┌──────┴───────┐    ┌──────┴───────┐
-         │          │Auth Midware  │    │Auth Midware  │
-         │          │JWT → User    │    │JWT → User    │
-         │          └──────┬───────┘    └──────┬───────┘
-         │                 │                   │
-         │                 │            ┌──────┴───────┐
-         │                 │            │  Role Check  │
-         │                 │            │ role=seller? │
-         │                 │            └───┬──────┬───┘
-         │                 │                │      │
-         │                 │             ✓ Yes   ✗ No
-         │                 │                │      │
-         │                 │         ┌──────┴──┐   ▼
-         │                 │         │ Multer  │  403
-         │                 │         │ Upload  │  Forbidden
-         │                 │         └────┬────┘
-         │                 │              │
-         ▼                 ▼              ▼
-    ┌──────────────────────────────────────────┐
-    │         express-validator                 │
-    │    Validate body, params, query          │
-    └─────────────────┬────────────────────────┘
-                      ▼
-            ┌──────────────────┐
-            │   Controller     │  ← Business logic
-            └──┬───────┬───┬───┘
-               │       │   │
-        ┌──────┘       │   └──────┐
-        ▼              ▼          ▼
-  ┌──────────┐  ┌───────────┐  ┌──────────────┐
-  │DAO Layer │  │ Services  │  │JSON Response │
-  │Aggregation│ │Razorpay   │  │status + data │
-  │Pipelines │  │ImageKit   │  └──────────────┘
-  └────┬─────┘  │Gmail API  │
-       │        └─────┬─────┘
-       ▼              ▼
-  ┌──────────────────────┐
-  │    MongoDB Atlas      │
-  └──────────────────────┘
+```mermaid
+flowchart TD
+    REQ([Incoming HTTP Request])
+
+    REQ --> MORGAN["📋 Morgan Logger\nLogs method · URL · status · time"]
+    MORGAN --> BODY["📦 Body Parsers\nexpress.json · urlencoded · cookieParser"]
+    BODY --> CORS["🌐 CORS Middleware\nWhitelist origin · credentials · methods"]
+    CORS --> ROUTE{Route Matching}
+
+    ROUTE -->|Public route| PUB["🔓 Public\n/auth · /products GET"]
+    ROUTE -->|Authenticated route| AUTH_MW["🔑 JWT Auth Middleware\nVerify token → attach user"]
+    ROUTE -->|Seller-only route| SELLER_MW["🔑 JWT Auth Middleware\nVerify token → attach user"]
+
+    SELLER_MW --> ROLE{Role Check\nrole === seller?}
+    ROLE -->|✅ Yes| MULTER["📁 Multer\nParse multipart/form-data\nBuffer image uploads"]
+    ROLE -->|❌ No| FORBIDDEN["🚫 403 Forbidden"]
+
+    PUB --> VALID["✅ express-validator\nValidate body · params · query"]
+    AUTH_MW --> VALID
+    MULTER --> VALID
+
+    VALID --> CTRL["🧠 Controller\nBusiness logic"]
+
+    CTRL --> DAO["🗄️ DAO Layer\nAggregation Pipelines"]
+    CTRL --> SVC["⚙️ Services\nRazorpay · ImageKit · Gmail API"]
+    CTRL --> RES["📤 JSON Response\nstatus + data"]
+
+    DAO --> DB[(MongoDB Atlas)]
+    SVC --> EXT[External APIs]
+
+    style REQ fill:#2d1b69,color:#fff
+    style FORBIDDEN fill:#6b0000,color:#fff
+    style DB fill:#0d4f0d,color:#fff
+    style EXT fill:#0d3b4f,color:#fff
 ```
 
-Every request passes through Morgan logging, body parsing, and CORS before hitting the route matcher. Depending on the endpoint's access level, it may pass through JWT authentication, role verification, file upload parsing (Multer), and input validation — all before reaching the controller. Controllers delegate data access to the DAO layer (for complex aggregation pipelines) and external integrations to dedicated service modules, keeping business logic decoupled from infrastructure concerns.
+> Every request traverses Morgan logging, body parsing, and CORS before hitting the route matcher. Access-protected endpoints pass through JWT authentication, role verification, file upload parsing, and input validation — in that order — before reaching the controller. Controllers delegate to the DAO layer for complex aggregations and to dedicated service modules for external integrations.
 
 ---
 
@@ -319,79 +342,90 @@ Every request passes through Morgan logging, body parsing, and CORS before hitti
 
 ```
 Snitch/
+├── .github/
+│   └── workflows/
+│       ├── deploy.yml              # Render deployment workflow
+│       └── test.yml                # CI test workflow
+│
 ├── Backend/
-│   ├── server.js                          # Entry point — connects DB, starts Express on port 3000
-│   ├── package.json                       # Backend dependencies and scripts
-│   ├── .env                               # Environment variables (secrets, DB URI, API keys)
-│   ├── public/                            # Production frontend build output (served statically)
-│   └── src/
-│       ├── app.js                         # Express app setup — middleware, CORS, routes, Passport config
-│       ├── config/
-│       │   ├── config.js                  # Centralized env-var loader with fail-fast validation
-│       │   └── database.js                # Mongoose connection to MongoDB Atlas
-│       ├── controllers/
-│       │   ├── auth.controller.js         # Register, login, Google OAuth, logout, forgot/reset password
-│       │   ├── product.controller.js      # CRUD for products and variants, search with filters
-│       │   └── cart.controller.js         # Cart ops, order creation, Razorpay verify, email dispatch
-│       ├── dao/
-│       │   ├── cart.dao.js                # Cart aggregation pipeline (joins products + variants)
-│       │   └── product.dao.js             # Variant stock lookup helper
-│       ├── middleware/
-│       │   └── auth.middleware.js          # JWT verification + role-based (buyer/seller) guards
-│       ├── models/
-│       │   ├── user.model.js              # User schema with bcrypt pre-save hook and comparePassword
-│       │   ├── product.model.js           # Product with nested variants (images, stock, attributes, price)
-│       │   ├── cart.model.js              # Per-user cart with product/variant references
-│       │   ├── payment.model.js           # Payment record with Razorpay IDs and order item snapshots
-│       │   ├── otp.model.js               # OTP with 10-minute TTL auto-expiry
-│       │   └── price.schema.js            # Reusable subdocument schema (amount + currency enum)
-│       ├── routes/
-│       │   ├── auth.route.js              # Auth endpoints with validation middleware
-│       │   ├── product.route.js           # Product endpoints with seller auth + multer upload
-│       │   └── cart.route.js              # Cart and payment endpoints with buyer auth
-│       ├── services/
-│       │   ├── payment.service.js         # Razorpay SDK wrapper — order creation
-│       │   └── storage.service.js         # ImageKit SDK wrapper — buffer-based file upload
-│       ├── utils/
-│       │   └── email.js                   # Gmail REST API email sender with OAuth2 token refresh
-│       └── validator/
-│           ├── auth.validator.js          # Registration, login, forgot/reset password validation rules
-│           ├── product.validator.js       # Product creation validation rules
-│           └── cart.validator.js           # Cart add/modify validation rules
+│   ├── public/                     # Production frontend build (served as static)
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── config.js           # Centralized env-var loader & validator
+│   │   │   └── database.js         # Mongoose connection setup
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.js  # JWT, OTP, Google OAuth logic
+│   │   │   ├── cart.controller.js  # Cart, payment, and email notifications
+│   │   │   └── product.controller.js # Product & variant CRUD + search
+│   │   ├── dao/
+│   │   │   ├── cart.dao.js         # Cart aggregation pipeline helpers
+│   │   │   └── product.dao.js      # Variant inventory stock helpers
+│   │   ├── middleware/
+│   │   │   └── auth.middleware.js  # JWT check and role-based route guard
+│   │   ├── models/
+│   │   │   ├── cart.model.js       # Shopping cart schema
+│   │   │   ├── otp.model.js        # Password-reset OTP schema (10 min TTL)
+│   │   │   ├── payment.model.js    # Order payment + snapshot schema
+│   │   │   ├── price.schema.js     # Reusable price subdocument
+│   │   │   ├── product.model.js    # Product catalog + embedded variant schema
+│   │   │   └── user.model.js       # User schema (buyer / seller)
+│   │   ├── routes/
+│   │   │   ├── auth.route.js       # Auth and validation routes
+│   │   │   ├── cart.route.js       # Cart and checkout/payment routes
+│   │   │   └── product.route.js    # Catalog and variant management routes
+│   │   ├── services/
+│   │   │   ├── payment.service.js  # Razorpay integration
+│   │   │   └── storage.service.js  # ImageKit buffer image upload
+│   │   ├── utils/
+│   │   │   └── email.js            # Gmail REST API OAuth2 dispatcher
+│   │   ├── validator/
+│   │   │   ├── auth.validator.js   # Auth request validation rules
+│   │   │   ├── cart.validator.js   # Cart request validation rules
+│   │   │   └── product.validator.js # Product request validation rules
+│   │   └── app.js                  # Express application setup
+│   ├── tests/
+│   │   ├── auth.test.js            # Authentication integration tests
+│   │   ├── cart.test.js            # Cart and checkout integration tests
+│   │   ├── product.test.js         # Product and variant catalog tests
+│   │   └── setup.js                # Jest database setup configuration
+│   ├── .env.example                # Environment variable reference template
+│   ├── jest.config.js              # Jest runner configuration
+│   ├── package.json                # Backend dependencies & scripts
+│   └── server.js                   # Server entry point
 │
 └── Frontend/
-    ├── index.html                         # HTML shell with Google Fonts (Bebas Neue + DM Sans)
-    ├── vite.config.js                     # Vite config with Tailwind plugin and API proxy
-    ├── package.json                       # Frontend dependencies and scripts
-    └── src/
-        ├── main.jsx                       # React entry point with Redux Provider
-        ├── app/
-        │   ├── App.jsx                    # Root component — auth check on mount, router provider
-        │   ├── app.routes.jsx             # Route definitions with Protected wrapper for role-based access
-        │   ├── app.store.js               # Redux store combining auth, product, cart slices
-        │   └── App.css                    # Global styles
-        └── features/
-            ├── auth/
-            │   ├── pages/                 # Register, Login, ForgotPassword pages
-            │   ├── components/            # Protected route guard, Google sign-in button
-            │   ├── hook/useAuth.js        # Auth actions hook (register, login, getMe, logout)
-            │   ├── service/auth.api.js    # Axios calls to /api/auth endpoints
-            │   └── state/auth.slice.js    # Redux slice for user and auth loading state
-            ├── products/
-            │   ├── pages/                 # Home, ProductDetail, SearchProducts, CreateProduct,
-            │   │                          #   Dashboard, SellerProductDetail
-            │   ├── hooks/useProduct.js    # Product CRUD and search actions hook
-            │   ├── service/product.api.js # Axios calls to /api/products endpoints
-            │   └── state/product.slice.js # Redux slice for products list and detail state
-            ├── cart/
-            │   ├── pages/                 # Cart, OrderSuccess pages
-            │   ├── hooks/useCart.js        # Cart actions and Razorpay checkout hook
-            │   ├── service/cart.api.js    # Axios calls to /api/cart endpoints
-            │   └── state/cart.slice.js    # Redux slice for cart items and loading state
-            └── Shared/
-                └── Components/
-                    ├── Nav.jsx            # Global navigation bar
-                    └── About.jsx          # About page component
+    ├── public/                     # Static assets (icons, images)
+    ├── src/
+    │   ├── app/
+    │   │   ├── App.jsx             # Root React component
+    │   │   ├── app.routes.jsx      # React Router v7 routes & role validation
+    │   │   └── app.store.js        # RTK global store
+    │   ├── features/
+    │   │   ├── auth/
+    │   │   │   ├── components/     # Google OAuth button & auth guard
+    │   │   │   ├── hook/useAuth.js # Auth logic and request wrapper
+    │   │   │   ├── pages/          # Login · Signup · Password reset
+    │   │   │   ├── service/auth.api.js  # Auth API functions
+    │   │   │   └── state/auth.slice.js  # Auth RTK slice
+    │   │   ├── cart/
+    │   │   │   ├── hooks/useCart.js     # Cart interactions & checkout hook
+    │   │   │   ├── pages/          # Checkout · Payment completion
+    │   │   │   ├── service/cart.api.js  # Cart & order API helper
+    │   │   │   └── state/cart.slice.js  # Cart items & totals slice
+    │   │   ├── products/
+    │   │   │   ├── hooks/useProduct.js  # Product management hooks
+    │   │   │   ├── pages/          # Catalog · Detail · Seller dashboard
+    │   │   │   ├── service/product.api.js  # Catalog API helper
+    │   │   │   └── state/product.slice.js  # Catalog & filter state
+    │   │   └── Shared/
+    │   │       └── Components/
+    │   │           ├── About.jsx   # Public about page
+    │   │           └── Nav.jsx     # Responsive navigation header
+    │   └── main.jsx                # Client entry point
+    ├── eslint.config.js            # ESLint configuration
+    ├── index.html                  # HTML shell
+    ├── package.json                # Frontend dependencies & scripts
+    └── vite.config.js              # Vite build and proxy configuration
 ```
 
 ---
@@ -399,11 +433,12 @@ Snitch/
 ## Setup & Installation
 
 ### Prerequisites
+
 - Node.js ≥ 18
 - MongoDB Atlas cluster (or local MongoDB instance)
 - Razorpay test/live API keys
 - ImageKit account
-- Google Cloud OAuth 2.0 credentials (for Google sign-in and email sending)
+- Google Cloud project with OAuth 2.0 credentials (for sign-in and email sending)
 
 ### Backend
 
@@ -415,28 +450,34 @@ cd snitch/Backend
 # 2. Install dependencies
 npm install
 
-# 3. Create environment file
+# 3. Configure environment
 cp .env.example .env
-# Fill in the following variables:
-#   MONGO_URI            — MongoDB connection string
-#   JWT_SECRET_KEY       — Secret for signing JWTs
-#   GOOGLE_CLIENT_ID     — Google OAuth client ID
-#   GOOGLE_CLIENT_SECRET — Google OAuth client secret
-#   IMAGEKIT_PRIVATE_KEY — ImageKit private API key
-#   RAZORPAY_KEY_ID      — Razorpay key ID
-#   RAZORPAY_KEY_SECRET  — Razorpay key secret
-#   GOOGLE_REFRESH_TOKEN — Gmail API refresh token (for sending emails)
-#   GOOGLE_USER          — Gmail address used as the sender
+```
 
+Edit `.env` with your credentials:
+
+| Variable | Description |
+|----------|-------------|
+| `MONGO_URI` | MongoDB Atlas connection string |
+| `JWT_SECRET_KEY` | Secret for signing JWTs |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `IMAGEKIT_PRIVATE_KEY` | ImageKit private API key |
+| `RAZORPAY_KEY_ID` | Razorpay key ID |
+| `RAZORPAY_KEY_SECRET` | Razorpay key secret |
+| `GOOGLE_REFRESH_TOKEN` | Gmail API refresh token |
+| `GOOGLE_USER` | Gmail address used as sender |
+
+```bash
 # 4. Start development server
 npm run dev
-# Server runs on http://localhost:3000
+# → http://localhost:3000
 ```
 
 ### Frontend
 
 ```bash
-# 1. Navigate to frontend directory
+# 1. Navigate to the frontend directory
 cd ../Frontend
 
 # 2. Install dependencies
@@ -444,7 +485,7 @@ npm install
 
 # 3. Start development server
 npm run dev
-# Frontend runs on http://localhost:5173 (API calls proxied to backend)
+# → http://localhost:5173 (API calls proxied to backend)
 ```
 
 ---
@@ -453,72 +494,61 @@ npm run dev
 
 ### Authentication
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/api/auth/register` | Register a new buyer or seller account | No |
-| `POST` | `/api/auth/login` | Login with email and password | No |
-| `GET` | `/api/auth/google` | Initiate Google OAuth sign-in flow | No |
-| `GET` | `/api/auth/google/callback` | Google OAuth callback (sets JWT cookie, redirects) | No |
-| `GET` | `/api/auth/me` | Get current authenticated user profile | Yes |
-| `GET` | `/api/auth/logout` | Clear auth cookie and log out | Yes |
-| `POST` | `/api/auth/forgot-password` | Send OTP to email for password reset | No |
-| `POST` | `/api/auth/reset-password` | Verify OTP and set new password | No |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|:---:|
+| `POST` | `/api/auth/register` | Register a new buyer or seller account | — |
+| `POST` | `/api/auth/login` | Login with email and password | — |
+| `GET` | `/api/auth/google` | Initiate Google OAuth sign-in flow | — |
+| `GET` | `/api/auth/google/callback` | Google OAuth callback — sets JWT cookie and redirects | — |
+| `GET` | `/api/auth/me` | Get current authenticated user profile | ✅ |
+| `GET` | `/api/auth/logout` | Clear auth cookie and log out | ✅ |
+| `POST` | `/api/auth/forgot-password` | Send OTP to email for password reset | — |
+| `POST` | `/api/auth/reset-password` | Verify OTP and set new password | — |
 
 ### Products
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/api/products` | List all products (paginated) | No |
-| `GET` | `/api/products/search?q=&minPrice=&maxPrice=&size=&color=&sort=` | Search and filter products (paginated) | No |
-| `GET` | `/api/products/detail/:id` | Get product details by ID | No |
-| `GET` | `/api/products/seller` | Get authenticated seller's products (paginated) | Seller |
-| `POST` | `/api/products` | Create a new product (multipart, up to 7 images) | Seller |
-| `PATCH` | `/api/products/update/product/:id` | Update product details | Seller |
-| `DELETE` | `/api/products/delete/:id` | Delete a product | Seller |
-| `POST` | `/api/products/:productId/variants` | Add a variant to a product | Seller |
-| `PATCH` | `/api/products/update/variant/:productId/:variantId` | Update a product variant | Seller |
-| `DELETE` | `/api/products/delete/variant/:productId/:variantId` | Delete a product variant | Seller |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|:---:|
+| `GET` | `/api/products` | List all products (paginated) | — |
+| `GET` | `/api/products/search` | Search and filter with query params: `q`, `minPrice`, `maxPrice`, `size`, `color`, `sort` | — |
+| `GET` | `/api/products/detail/:id` | Get product details by ID | — |
+| `GET` | `/api/products/seller` | Get authenticated seller's products (paginated) | 🔒 Seller |
+| `POST` | `/api/products` | Create a new product (multipart, up to 7 images) | 🔒 Seller |
+| `PATCH` | `/api/products/update/product/:id` | Update product details | 🔒 Seller |
+| `DELETE` | `/api/products/delete/:id` | Delete a product | 🔒 Seller |
+| `POST` | `/api/products/:productId/variants` | Add a variant to a product | 🔒 Seller |
+| `PATCH` | `/api/products/update/variant/:productId/:variantId` | Update a product variant | 🔒 Seller |
+| `DELETE` | `/api/products/delete/variant/:productId/:variantId` | Delete a product variant | 🔒 Seller |
 
 ### Cart & Payments
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/api/cart` | Get current user's cart with aggregated totals | Yes |
-| `POST` | `/api/cart/add/:productId/:variantId` | Add item to cart (stock-validated) | Yes |
-| `PATCH` | `/api/cart/quantity/increment/:productId/:variantId` | Increment cart item quantity by 1 | Yes |
-| `PATCH` | `/api/cart/quantity/decrement/:productId/:variantId` | Decrement cart item quantity by 1 | Yes |
-| `DELETE` | `/api/cart/item/:productId/:variantId` | Remove item from cart | Yes |
-| `POST` | `/api/cart/payment/create/order` | Create Razorpay order from cart | Yes |
-| `POST` | `/api/cart/payment/buy-now` | Create Razorpay order for single item (Buy Now) | Yes |
-| `POST` | `/api/cart/payment/verify/order` | Verify Razorpay payment and finalize order | Yes |
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|:---:|
+| `GET` | `/api/cart` | Get current user's cart with aggregated totals | ✅ |
+| `POST` | `/api/cart/add/:productId/:variantId` | Add item to cart (stock-validated) | ✅ |
+| `PATCH` | `/api/cart/quantity/increment/:productId/:variantId` | Increment cart item quantity by 1 | ✅ |
+| `PATCH` | `/api/cart/quantity/decrement/:productId/:variantId` | Decrement cart item quantity by 1 | ✅ |
+| `DELETE` | `/api/cart/item/:productId/:variantId` | Remove item from cart | ✅ |
+| `POST` | `/api/cart/payment/create/order` | Create Razorpay order from cart | ✅ |
+| `POST` | `/api/cart/payment/buy-now` | Create Razorpay order for single item (Buy Now) | ✅ |
+| `POST` | `/api/cart/payment/verify/order` | Verify Razorpay payment and finalize order | ✅ |
 
 ---
 
-## Future Improvements / Roadmap
+## Roadmap
 
-- **Order history and tracking** — Persistent order dashboard for buyers to view past purchases, and for sellers to manage fulfillment status (processing → shipped → delivered)
-- **Wishlist and save-for-later** — Allow buyers to bookmark products and move items between wishlist and cart, improving conversion rates
-- **Review and rating system** — Enable verified buyers to leave product reviews with star ratings, building social proof and helping purchase decisions
-- **Admin dashboard with analytics** — Platform-level admin panel with sales metrics, user growth charts, and inventory alerts — enabling data-driven merchandising decisions
-- **Expanded Test Coverage** — Implement end-to-end frontend tests using Playwright/Cypress, and add unit testing coverage for controller functions
+| Feature | Description |
+|---------|-------------|
+| **Order history & tracking** | Persistent dashboard for buyers to view past purchases; sellers to update fulfillment status (processing → shipped → delivered) |
+| **Wishlist & save-for-later** | Bookmark products and move items between wishlist and cart |
+| **Review & rating system** | Verified buyers can leave star ratings and written reviews |
+| **Admin analytics dashboard** | Platform-level metrics — sales, user growth, inventory alerts — for data-driven merchandising |
+| **Expanded test coverage** | End-to-end frontend tests with Playwright/Cypress; unit tests for all controller functions |
 
 ---
 
-## Project Rating & Code Quality Audit
+<div align="center">
 
-### Overall Score: **9.7 / 10**
+Built with ❤️ for the streets · Powered by React, Express, and MongoDB
 
-Snitch is a highly polished, production-grade MERN stack application. Below is an audit of its architecture, security, and feature implementations:
-
-| Criterion | Score | Evaluation Details |
-|:---|:---:|:---|
-| **Architecture & Structure** | **9.8/10** | Excellent domain-driven design on both Backend (Controllers, DAO, Routes, Validators) and Frontend (Feature-based structure: auth, cart, products). Decoupled and clean. |
-| **Security & Hardening** | **9.6/10** | Implements cookie-based stateless JWT sessions, strict input validation using `express-validator` to prevent MongoDB injection, and robust rate limiting (general + auth-specific limits) to mitigate brute-force attacks. |
-| **Robustness & Reliability** | **9.7/10** | Atomic stock management with automatic compensation/rollback logic prevents race-conditions or over-selling. Email API falls back gracefully during development. Jest integration suite passes 100% locally with automated memory server setup. |
-| **CI/CD & DevOps** | **9.8/10** | Fully automated GitHub Actions CI/CD pipeline. Tests trigger on every push/PR to `main`. On successful test runs, an automated Render Deploy Webhook is triggered (`deploy.yml`) to deploy instantly to `https://snitch-trend.onrender.com`. |
-| **Aesthetics & UX** | **9.6/10** | High-fidelity streetwear aesthetic using a dark mode theme, Bebas Neue/DM Sans typography, dynamic micro-animations, glassmorphism, responsive navigation, and real-time inventory validation on cart actions. |
-
-### Key Strengths & Technical Highlights:
-- **Clean Decoupling:** Production URLs and backend settings are entirely parameter-driven via environment variables in `config.js` with fail-fast validation.
-- **Cross-Platform Test Suite:** The Jest tests run flawlessly across Linux (CI) and Windows (Local) with customized ESM configurations.
-- **Transactional Integrity:** Complex checkout flow utilizes Mongoose transaction patterns, guaranteeing either complete success or safe inventory rollbacks.
+</div>
