@@ -12,9 +12,15 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         GOOGLE_USER
     } = config;
 
-    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN || !GOOGLE_USER) {
+    if (
+        process.env.NODE_ENV === "test" ||
+        !GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "test" ||
+        !GOOGLE_CLIENT_SECRET || GOOGLE_CLIENT_SECRET === "test" ||
+        !GOOGLE_REFRESH_TOKEN || GOOGLE_REFRESH_TOKEN === "test" ||
+        !GOOGLE_USER || GOOGLE_USER === "test@test.com"
+    ) {
         console.log(`\n==================================================`);
-        console.log(`[DEVELOPMENT] Outgoing Email Dispatched (Fallback Console Log)`);
+        console.log(`[DEVELOPMENT/TEST] Outgoing Email Dispatched (Fallback Console Log)`);
         console.log(`To:      ${to}`);
         console.log(`Subject: ${subject}`);
         console.log(`HTML Body Excerpt:\n${html ? html.replace(/<[^>]*>/g, ' ').substring(0, 300) : ''}...`);
