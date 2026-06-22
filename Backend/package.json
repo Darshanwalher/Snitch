@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles",
+    "start": "node server.js",
     "dev": "npx nodemon server.js"
   },
   "devDependencies": {

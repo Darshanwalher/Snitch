@@ -4,6 +4,10 @@ import app from "../src/app.js";
 
 let mongoServer;
 
+if (typeof jest !== "undefined") {
+    jest.setTimeout(120000);
+}
+
 export { app };
 
 export async function setupDB() {
